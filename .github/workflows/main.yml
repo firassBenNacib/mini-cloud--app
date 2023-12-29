@@ -38,8 +38,15 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
+            # Pull and start MongoDB
+            docker pull mongo
+            docker stop mongo || true
+            docker rm mongo || true
+            docker run -d --name mongo -p 27017:27017 mongo
+
+            # Pull and start your application
             docker pull ${{ secrets.DOCKER_USERNAME }}/mini-cloud-app:latest
             docker stop mini-cloud-app || true
             docker rm mini-cloud-app || true
-            docker run -d -p 80:3000 --name=mini-cloud-app ${{ secrets.DOCKER_USERNAME }}/mini-cloud-app:latest
+            docker run -d -p 80:3000 --name=mini-cloud-app --link mongo:mongo ${{ secrets.DOCKER_USERNAME }}/mini-cloud-app:latest
             docker ps
